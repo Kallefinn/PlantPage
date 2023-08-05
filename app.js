@@ -18,14 +18,18 @@ function startup() {
     addSeedSlot(3);
 
     plantSlots[1].Insert(new Plant(Sun));
-    seedPouch[0].setItem(4,Bean.Seed);
-    fruitPouch[1].setItem(6,Berry.Fruit);
+    console.log(document.getElementById(Bean.Seed));
+    seedPouch[0].setItem(new Item(4,Bean.Seed));
+    fruitPouch[1].setItem(new Item(2,Berry.Fruit));
+
+    const shovel = new generalButtons("newPlantSlotButton","green","create");
+    const spatula = new generalButtons("deletePlantSlotButton","red","delete");
+
 }
 
 //function to add "Windows" or "flowerpots" in this case for plants
 addPlantSlot = (amount=1) => {    
 
-    console.log("clicked");
     
     for(let i=0; i<amount ;++i) {
 
@@ -78,6 +82,7 @@ const Berry = {
 }
 
 function createInstanceOf(name) {
+    console.log(name);
     let texture = document.getElementById(name).cloneNode();
     texture.id = randId();
     return texture;
@@ -94,20 +99,28 @@ function createInteractButton(divElement,texture = "BaseTexture") {
 
 
 class generalButtons {
-    constructor(name) {
+    constructor(name, color="grey",method) {
         let button = document.getElementById(name);
-        button.addEventListener("click",this.addPlantSlot);
+        if(method == "create")
+            button.addEventListener("click",this.addPlantSlot);
+        if(method == "delete")
+            button.addEventListener("click",this.deletePlantSlot);
+        button.style.backgroundColor = color;
         this.ID = button.ID;
     }
 
-    addPlantSlot = (amount=1) => {    
-
-        console.log("clicked");
+    addPlantSlot = () => {    
         
         let bucket = new flowerPot();
 
         //store for later
         plantSlots.push(bucket);
+    }
+
+    deletePlantSlot = () => {
+        let slot = document.getElementById(plantSlots.pop().elementID);
+        slot.remove();
+        
     }
 }
 
@@ -245,6 +258,7 @@ class ItemWindow {
     setItem(item) {
         this.item = item;
         let divElement = document.getElementById(this.elementID);
+        console.log(item.texture);
         let texture = createInstanceOf(item.texture);
         divElement.appendChild(texture);
 

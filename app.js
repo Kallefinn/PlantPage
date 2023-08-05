@@ -4,6 +4,24 @@ function randId() {
     return "id" + Math.random().toString(16).slice(2);
 }
 
+
+var plantSlots = [];
+
+var seedPouch = [];
+
+var fruitPouch = [];
+
+
+function startup() {
+    addPlantSlot(3);
+    addFruitSlot(3);
+    addSeedSlot(3);
+
+    plantSlots[1].Insert(new Plant(Sun));
+    seedPouch[0].setItem(4,Bean.Seed);
+    fruitPouch[1].setItem(6,Berry.Fruit);
+}
+
 //function to add "Windows" or "flowerpots" in this case for plants
 addPlantSlot = (amount=1) => {    
 
@@ -19,8 +37,6 @@ addPlantSlot = (amount=1) => {
 }
 
 function addSeedSlot(count=1) {
-    
-
     for(let i=0; i<count ;++i) {
         let seed = new ItemWindow("SeedInventory");
         seedPouch.push(seed);
@@ -28,15 +44,17 @@ function addSeedSlot(count=1) {
 }
 
 function addFruitSlot(count=1) {
-
-
     for(let i=0; i<count ;++i) {
         let fruit = new ItemWindow("FruitInventory");
         fruitPouch.push(fruit);
     }
 }
 
-
+const BaseCase = {
+    Plant: ["BaseTexture","BaseTexture"],
+    Seed: "BaseTexture",
+    Fruit: "BaseTexture"
+}
 
 const Sun = {
 
@@ -55,11 +73,24 @@ const Bean = {
 const Berry = {
 
     Plant: ["Berrybush_1","Berrybush_1"],
-    Seed: "BerrybushSeed",
+    Seed: "Berrybushseed",
     Fruit: "Berry"
 }
 
+function createInstanceOf(name) {
+    let texture = document.getElementById(name).cloneNode();
+    texture.id = randId();
+    return texture;
+}
 
+function createInteractButton(divElement,texture = "BaseTexture") {
+    let button = document.createElement("button");
+    button.id = randId();
+    button.classList.add("interactIcon");
+    button.append(createInstanceOf(texture));
+    divElement.appendChild(button);
+    return button.id;
+}
 
 
 class generalButtons {
@@ -82,9 +113,8 @@ class generalButtons {
 
 class Item {
     
-    constructor(count=1, texture) {
+    constructor(count=1, texture = "BaseTexture") {
         this.count = count;
-        this.name = texture;
         this.texture = texture;
     }
 
@@ -95,7 +125,8 @@ class Item {
 
 
 class Plant {
-    constructor(type){
+
+    constructor(type = BaseCase){
         this.stage = 0;
         this.type = type;
         this.ID = 0;
@@ -114,144 +145,78 @@ class Plant {
         this.stage++;
     }
 
-    Fruits = () => {
-
-        let fruitAmount = Math.floor(Math.random() * 3);
-
-        return fruitAmount;
-    }
-
-    Seeds = () => {
-        let seedAmount = Math.floor(Math.random() * 3);
-
-        return seedAmount;
-    }
-
-    
-    planttype(i) {
-        return this.type.Plant[i];
+    yield = () => {
+        return Math.floor(Math.random() * 3);
     }
     
-    seedtype = () => {
-        return this.type.Seed;
-    }
-    
-    fruittype = () => {
-        return this.type.Fruit;
-    }
 }
 
 
 class flowerPot {
-    constructor() {
+    
+    constructor(plant = new Plant()) {
+
+        this.plant = plant;
 
         let divElement = document.createElement("div");
         this.elementID = divElement.id = randId();
         divElement.classList.add("plantSlots");
 
-        this.createHarvestButton(divElement);
-        this.createWaterButton(divElement);
+        let plantImage = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
+        this.plant.ID = plantImage.id;
+
+        divElement.append(plantImage);
 
         const mainWindow = document.getElementById("mainWindow");
         mainWindow.appendChild(divElement);
     }
 
-    plant(flower) {
-        this.flower = flower;
+    Insert(flower) {
 
-        //insert plant image
         let divElement = document.getElementById(this.elementID);
-        let texture = document.getElementById(this.flower.type.Plant[this.flower.stage]).cloneNode();
-        this.flower.ID = texture.id = randId();
-        divElement.append(texture);
 
         //insert interactable shiggy
-        let shiggy = document.getElementById("wateringcan").cloneNode();
-        let watericon = document.getElementById(this.watericonID);
-        watericon.append(shiggy);
-        watericon.addEventListener("click",this.watering);
+        let waterbuttonID = createInteractButton(divElement,"wateringcan");
+        document.getElementById(waterbuttonID).addEventListener("click",this.watering);
 
         //insert interactable death
-        let death = document.getElementById("death").cloneNode();
-        let harvesticon = document.getElementById(this.harvesticonID);
-        harvesticon.append(death);
-        harvesticon.addEventListener("click", this.harvest);
+        let harvestbuttonID = createInteractButton(divElement,"death");
+        document.getElementById(harvestbuttonID).addEventListener("click",this.harvest);
+
+
+        let oldtexture = document.getElementById(this.plant.ID);
+
+        this.plant = flower;
+
+
+        let plantImage = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
+        this.plant.ID = plantImage.id;
+        divElement.replaceChild(plantImage,oldtexture);
+
+
 
     }
 
     harvest = () => {
 
-
-
-        let fruits = new Item(this.flower.Fruits,this.flower.fruittype);
-        let seeds = new Item(this.flower.Seeds,this.flower.seedtype);
-
-        console.log("created");
-
-        if(fruits != null){
-            for (let i=0; i < fruitPouch.length; i++) {
-                console.log(fruitPouch[i]);
-                if(fruitPouch[i].sameFruit(fruits)){
-                    console.log("fruits");
-                    fruitPouch[i].add(fruits.count);
-                    return;
-                }
-            }
-            
-            for (let i=0; i < fruitPouch.length; i++) {
-                if(fruitPouch[i].isEmpty()){
-                    console.log("fruits");
-                    fruitPouch[i].setItem(fruits.fruittype);
-                    return;
-                }
-            }
-            
-        }
-
-        if(seeds != null){
-
-            for (let i=0; i < seedPouch.length; i++) {
-                if(seedPouch[i].sameSeed(seeds)){
-                    console.log("seeds");
-                    seedPouch[i].add(seeds.count);
-                    return;
-                }
-            }
-        }
-
-
-
     }
 
     watering = () => {
         let divElement = document.getElementById(this.elementID);
-        let oldtexture = document.getElementById(this.flower.ID);
         
-        this.flower.grow();
-        if(document.getElementById(this.flower.planttype(this.flower.stage)) != null) {
-            let texture = document.getElementById(this.flower.planttype(this.flower.stage)).cloneNode();
-            this.flower.ID = texture.id = randId();
+        this.plant.grow();
+
+        console.log(this.plant.ID);
+        let oldtexture = document.getElementById(this.plant.ID);
+        let texture = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
+        this.plant.ID = texture.id;
             
-            divElement.replaceChild(texture, oldtexture);
-        }
+        divElement.replaceChild(texture, oldtexture);    
     }
 
-    createHarvestButton(divElement) {
-        let harvesticon = document.createElement("button");
-        this.harvesticonID = harvesticon.id = randId();
-        harvesticon.classList.add("interactIcon");
-        divElement.appendChild(harvesticon);
-    }
-
-    createWaterButton(divElement) {
-        let watericon = document.createElement("button");
-        this.watericonID = watericon.id = randId();
-        watericon.classList.add("interactIcon");
-        divElement.appendChild(watericon);
-    }
 
     isEmpty() {
-        return this.flower == null;
+        return this.plant == null;
     }
 
 }
@@ -259,7 +224,7 @@ class flowerPot {
 
 class ItemWindow {
 
-    constructor(inventoryID) {
+    constructor(inventoryID, item = new Item()) {
 
         let divElement = document.createElement("div");
         this.elementID = divElement.id = randId();
@@ -272,40 +237,25 @@ class ItemWindow {
        
         const mainWindow = document.getElementById(inventoryID);
         mainWindow.appendChild(divElement);
-        this.item = null;
+
+        this.item = item;
+        
     }
 
-    setItem(itemtype) {
-        this.item = new Item(1,itemtype);
+    setItem(item) {
+        this.item = item;
         let divElement = document.getElementById(this.elementID);
-        let texture = document.getElementById(itemtype).cloneNode();
+        let texture = createInstanceOf(item.texture);
         divElement.appendChild(texture);
 
         let counter = document.getElementById(this.counterID);
         counter.innerText = this.item.count;
     }
 
-    sameFruit(input) {
-        return this.item.fruittype == input.fruittype;
-    }
-
-    sameSeed(input) {
-        return this.item.seedtype == input.seedtype;
-    }
-
     isEmpty() {
         return this.item == null;
     }
 
-    plant() {
-        for (let i=0; i < plantSlots.length; i++) {
-            if (plantSlots[i].isEmpty() == true) {
-                plantSlots[i].plant(this.item);
-                return;
-            }
-        }
-        throw "no spot available";
-    }
 
     add(n=1) {
         this.item.count += n;

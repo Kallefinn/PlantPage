@@ -11,19 +11,52 @@ var seedPouch = [];
 
 var fruitPouch = [];
 
+const buttontype = {
+    create: "newPlantSlotButton",
+    delete: "deletePlantSlotButton"
+}
 
 function startup() {
     addPlantSlot(3);
-    addFruitSlot(3);
-    addSeedSlot(3);
+    addFruitSlot(2);
+    addSeedSlot(2);
 
+    plantSlots[0].Insert(new Plant(Berry));
     plantSlots[1].Insert(new Plant(Sun));
-    console.log(document.getElementById(Bean.Seed));
-    seedPouch[0].setItem(new Item(4,Bean.Seed));
-    fruitPouch[1].setItem(new Item(2,Berry.Fruit));
+    plantSlots[2].Insert(new Plant(Bean));
+    
+    seedPouch[0].Insert(new Item(4,Bean));
+    seedPouch[1].Insert(new Item(4,Berry));
+    
+    fruitPouch[0].Insert(new Item(2,Berry));
+    fruitPouch[1].Insert(new Item(2,Sun));
 
-    const shovel = new generalButtons("newPlantSlotButton","green","create");
-    const spatula = new generalButtons("deletePlantSlotButton","red","delete");
+    const shovel = new generalButtons(buttontype.create);
+    const spatula = new generalButtons(buttontype.delete);
+
+}
+
+function insertElementIn(array,element,name) {
+    let planted = false;
+
+    for(let i=0;i<array.length && !planted;i++) {
+        if(array[i].isSame(element.type)) {
+            array[i].add(element.count);
+            planted = true;
+        }
+    
+    }
+    for(let i=0;i<array.length && !planted;i++) {
+        if(array[i].isEmpty()) {
+            array[i].Insert(element);
+            planted = true;
+        }
+    }
+
+    if(planted == false) {
+        array.push(new ItemWindow(name));
+        array[array.length-1].Insert(element);
+    }
 
 }
 
@@ -42,14 +75,14 @@ addPlantSlot = (amount=1) => {
 
 function addSeedSlot(count=1) {
     for(let i=0; i<count ;++i) {
-        let seed = new ItemWindow("SeedInventory");
+        let seed = new ItemWindow(inventory.Seed);
         seedPouch.push(seed);
     }
 }
 
 function addFruitSlot(count=1) {
     for(let i=0; i<count ;++i) {
-        let fruit = new ItemWindow("FruitInventory");
+        let fruit = new ItemWindow(inventory.Fruit);
         fruitPouch.push(fruit);
     }
 }
@@ -76,7 +109,7 @@ const Bean = {
 
 const Berry = {
 
-    Plant: ["Berrybush_1","Berrybush_1"],
+    Plant: ["Berrybush_1","Berrybush_2"],
     Seed: "Berrybushseed",
     Fruit: "Berry"
 }
@@ -99,13 +132,16 @@ function createInteractButton(divElement,texture = "BaseTexture") {
 
 
 class generalButtons {
-    constructor(name, color="grey",method) {
+    constructor(name) {
         let button = document.getElementById(name);
-        if(method == "create")
+        if(name == buttontype.create){
             button.addEventListener("click",this.addPlantSlot);
-        if(method == "delete")
+            button.style.backgroundColor = "green";
+        }
+        if(name == buttontype.delete) {
             button.addEventListener("click",this.deletePlantSlot);
-        button.style.backgroundColor = color;
+            button.style.backgroundColor = "red";
+        }
         this.ID = button.ID;
     }
 
@@ -120,15 +156,19 @@ class generalButtons {
     deletePlantSlot = () => {
         let slot = document.getElementById(plantSlots.pop().elementID);
         slot.remove();
-        
     }
+}
+
+const inventory = {
+    Seed: "SeedInventory",
+    Fruit: "FruitInventory"
 }
 
 class Item {
     
-    constructor(count=1, texture = "BaseTexture") {
+    constructor(count=1, type = BaseCase) {
         this.count = count;
-        this.texture = texture;
+        this.type = type;
     }
 
     class() {
@@ -146,7 +186,10 @@ class Plant {
     }
 
     class() { return "plantSlots"; }
-
+    
+    fullyGrown() {
+        return this.stage == this.type.Plant.length - 1;
+    }
 
 //to do!
     tick = () => {
@@ -158,8 +201,9 @@ class Plant {
         this.stage++;
     }
 
-    yield = () => {
-        return Math.floor(Math.random() * 3);
+
+    heaped = () => {
+        return new Item(Math.floor(Math.random() * 2) + 1, this.type);
     }
     
 }
@@ -200,21 +244,31 @@ class flowerPot {
         let oldtexture = document.getElementById(this.plant.ID);
 
         this.plant = flower;
-
-
+        
         let plantImage = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
         this.plant.ID = plantImage.id;
         divElement.replaceChild(plantImage,oldtexture);
-
-
-
     }
 
     harvest = () => {
+        if(this.plant.fullyGrown()) {
+            this.plant.stage = 0;
+            this.updateImage();
+            insertElementIn(fruitPouch, this.plant.heaped(), "FruitInventory");
+            insertElementIn(seedPouch, this.plant.heaped(), "SeedInventory");
+        }
+    }
 
+    updateImage() {
+        let divElement = document.getElementById(this.elementID);
+        let oldtexture = document.getElementById(this.plant.ID);
+        let plantImage = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
+        this.plant.ID = plantImage.id;
+        divElement.replaceChild(plantImage,oldtexture);
     }
 
     watering = () => {
+        if( ! (this.plant.fullyGrown())) {
         let divElement = document.getElementById(this.elementID);
         
         this.plant.grow();
@@ -224,16 +278,19 @@ class flowerPot {
         let texture = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
         this.plant.ID = texture.id;
             
-        divElement.replaceChild(texture, oldtexture);    
+        divElement.replaceChild(texture, oldtexture);
+        }
     }
 
 
     isEmpty() {
-        return this.plant == null;
+        return this.plant.type == BaseCase;
     }
 
 }
 
+
+    
 
 class ItemWindow {
 
@@ -252,24 +309,34 @@ class ItemWindow {
         mainWindow.appendChild(divElement);
 
         this.item = item;
+        this.inventory = inventoryID;
         
     }
 
-    setItem(item) {
+    Insert(item) {
         this.item = item;
         let divElement = document.getElementById(this.elementID);
-        console.log(item.texture);
-        let texture = createInstanceOf(item.texture);
-        divElement.appendChild(texture);
+
+        if(this.inventory == inventory.Fruit) {
+            let texture = createInstanceOf(this.item.type.Fruit);
+            divElement.appendChild(texture);
+        }
+        if(this.inventory == inventory.Seed) {
+            let texture = createInstanceOf(this.item.type.Seed);
+            divElement.appendChild(texture);
+        }
 
         let counter = document.getElementById(this.counterID);
         counter.innerText = this.item.count;
     }
 
     isEmpty() {
-        return this.item == null;
+        return this.item.type == BaseCase;
     }
 
+    isSame(type) {
+        return this.item.type == type;
+    }
 
     add(n=1) {
         this.item.count += n;

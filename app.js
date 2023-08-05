@@ -5,6 +5,19 @@ function randId() {
 }
 
 
+function updateWorld() {
+
+    for(let i=0;i<plantSlots.length;i++){
+        if(!plantSlots[i].isEmpty()){
+            plantSlots[i].updatePlant();
+        }
+    }
+
+    requestAnimationFrame(updateWorld);
+}
+
+requestAnimationFrame(updateWorld);
+
 var plantSlots = [];
 
 var seedPouch = [];
@@ -115,7 +128,6 @@ const Berry = {
 }
 
 function createInstanceOf(name) {
-    console.log(name);
     let texture = document.getElementById(name).cloneNode();
     texture.id = randId();
     return texture;
@@ -183,6 +195,8 @@ class Plant {
         this.stage = 0;
         this.type = type;
         this.ID = 0;
+        this.watered = false;
+        this.timer = Math.floor(Math.random() * 5) + 5;
     }
 
     class() { return "plantSlots"; }
@@ -194,11 +208,21 @@ class Plant {
 //to do!
     tick = () => {
 
+        
+        if(1 == Math.floor(Math.random() * 200)) {
+            this.watered = false;
+        }
+
+        if(this.watered && Math.floor(Math.random() * 300) == 3) {
+            return true;
+        }
         return false;
+
     }
 
     grow = () => {
         this.stage++;
+        this.timer = Math.floor(Math.random() * 5) + 5;
     }
 
 
@@ -218,6 +242,9 @@ class flowerPot {
         let divElement = document.createElement("div");
         this.elementID = divElement.id = randId();
         divElement.classList.add("plantSlots");
+        
+        divElement.addEventListener("dragover",function(e){e.preventDefault();},false);
+        
 
         let plantImage = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
         this.plant.ID = plantImage.id;
@@ -228,7 +255,7 @@ class flowerPot {
         mainWindow.appendChild(divElement);
     }
 
-    Insert(flower) {
+    Insert = (flower) => {
 
         let divElement = document.getElementById(this.elementID);
 
@@ -268,20 +295,39 @@ class flowerPot {
     }
 
     watering = () => {
-        if( ! (this.plant.fullyGrown())) {
-        let divElement = document.getElementById(this.elementID);
-        
-        this.plant.grow();
-
-        console.log(this.plant.ID);
-        let oldtexture = document.getElementById(this.plant.ID);
-        let texture = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
-        this.plant.ID = texture.id;
-            
-        divElement.replaceChild(texture, oldtexture);
-        }
+        this.plant.watered = true;
     }
 
+    growPlant() {
+        if( ! (this.plant.fullyGrown())) {
+
+            let divElement = document.getElementById(this.elementID);
+            
+            this.plant.grow();
+    
+            let oldtexture = document.getElementById(this.plant.ID);
+            let texture = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
+            this.plant.ID = texture.id;
+                
+            divElement.replaceChild(texture, oldtexture);
+            }
+    }
+
+    updatePlant() {
+        let divElement = document.getElementById(this.elementID);
+
+        if(this.plant.tick()) {
+            this.growPlant();
+        }
+        
+        if(this.plant.watered == false) {
+            divElement.style.backgroundColor = "brown";
+        } else {
+            divElement.style.backgroundColor = "green";
+        }
+
+
+    }
 
     isEmpty() {
         return this.plant.type == BaseCase;
@@ -344,13 +390,4 @@ class ItemWindow {
         counter.innerText = this.item.count;
     }
 }
-
-
-
-
-
-
-
-
-
 

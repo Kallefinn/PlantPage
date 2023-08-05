@@ -1,0 +1,65 @@
+.layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1vw;
+}
+
+.plantWindow {
+    
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.2vh;
+    border: 1vw solid brown;
+    background-color:rgb(32, 168, 32);
+    width: 80vw;
+    height: 80vh;
+
+}
+.plantSlots {
+    display: flex;
+    flex-direction: row;
+    background-color:rgb(27, 163, 27);
+    width: 15vw;
+    height: 20vh;
+}
+
+.buttons {
+    border: 1px solid black;
+    display: flex;
+    width: 3.5vw;
+    height: 10vh;
+}
+
+.interactIcon {
+    background-color: green;
+    display: flex;
+    width: 2vw;
+    height: 3vh;
+}
+.inventoryWindowVertical {
+    display: flex;
+    flex-direction: column;
+    border: 1vh solid brown;
+    background-color:lightgoldenrodyellow;
+    height: 80vh;
+    width: 6vw;
+}
+.inventoryWindowHorizontal {
+    display: flex;
+    flex-direction: row;
+    border: 1vh solid rgb(39, 3, 3);
+    background-color: lightgoldenrodyellow;
+    height: 10vh;
+    width: 80vw;
+}
+.inventorySlots {
+    display: flex;
+    flex-direction: row-reverse;
+    width: 5vw;
+    height: 10vh;
+}
+.inventorySlotsCount {
+    display: flex;         
+}

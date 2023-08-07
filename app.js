@@ -49,6 +49,20 @@ function startup() {
 
 }
 
+function uglyDragAndDrop(text) {
+    console.log(Bean.Plant[0]);
+    if(text == Sun.Plant[0]) {
+        return Sun;
+    }
+    if(text == Bean.Plant[0]) {
+        return Bean;
+    }
+    if(text == Berry.Plant[0]) {
+        return Berry;
+    }
+    return BaseCase;
+}
+
 function insertElementIn(array,element,name) {
     let planted = false;
 
@@ -251,11 +265,27 @@ class flowerPot {
 
         divElement.append(plantImage);
 
+        divElement.addEventListener("dragenter", (Event) => {
+            Event.preventDefault();
+        });
+        divElement.addEventListener("dragover", (Event) => {
+            Event.preventDefault();
+        });
+        divElement.addEventListener("drop", (Event) => {
+            let cargo = Event.dataTransfer.getData("text");
+            console.log(cargo);
+            let input = uglyDragAndDrop(cargo);
+            console.log(input);
+            this.Insert(new Plant(input));
+        });
+
         const mainWindow = document.getElementById("mainWindow");
         mainWindow.appendChild(divElement);
     }
 
     Insert = (flower) => {
+
+        if(this.plant.type == BaseCase) {
 
         let divElement = document.getElementById(this.elementID);
 
@@ -275,6 +305,7 @@ class flowerPot {
         let plantImage = createInstanceOf(this.plant.type.Plant[this.plant.stage]);
         this.plant.ID = plantImage.id;
         divElement.replaceChild(plantImage,oldtexture);
+        }
     }
 
     harvest = () => {
@@ -350,7 +381,7 @@ class ItemWindow {
         this.counterID = counter.id = randId();
         counter.classList.add("inventorySlotsCount");
         divElement.appendChild(counter);
-       
+
         const mainWindow = document.getElementById(inventoryID);
         mainWindow.appendChild(divElement);
 
@@ -374,6 +405,11 @@ class ItemWindow {
 
         let counter = document.getElementById(this.counterID);
         counter.innerText = this.item.count;
+
+        divElement.addEventListener("dragstart", (Event) => 
+        Event.dataTransfer.setData("text",this.item.type.Plant[0]));
+        divElement.addEventListener("dragend", (Event) => {
+        this.add(-1);})
     }
 
     isEmpty() {
